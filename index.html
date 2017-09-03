@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="google-signin-client_id" content="608787834828-71306h3l0d8tfg0ooudb8enkm7dd1ta3.apps.googleusercontent.com">
+    <title>Platform</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.1/vue.js"></script>
+
+    <style>
+      body {
+        font-family: helvetica;
+      }
+      .live {
+        border-color: green;
+      }
+      .senderName {
+        color: blue;
+      }
+      .roomName {
+        color: red;
+      }
+      .genMsg {
+        font-size: 10px;
+        width: 200px;
+        padding: 10px;
+        border: 5px solid grey;
+        margin: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id='app'>
+
+      <!-- google sign-in -->
+      <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark" ref="signIn" v-show='!signedIn'></div>
+
+      <div id='teacherView' v-if='teacher.is'>
+        <!-- Teacher see this -->
+        <h3>Teacher</h3>
+
+        <button v-on:click="joinRoom(status,'Alg1')">Alg1</button>
+        <button v-on:click="leaveRoom(status,'Alg1')" v-bind:disabled="!connections.Alg1">Leave</button>
+        <br>
+
+        <div v-show="connections.Alg1" id='TeacherAlg1Chat'>
+          <div id='TeacherAlg1ChatBox'></div>
+          <br>
+          <form action="" v-on:submit.prevent="message(teacher.Alg1.currentInput,'Alg1',name)">
+            <input type="text" v-model="teacher.Alg1.currentInput" name="msg">
+            <button>Send</button>
+          </form>
+        </div>
+        <br>
+
+        <button v-on:click="joinRoom(status,'Geo')">Geo</button>
+        <button v-on:click="leaveRoom(status,'Geo')" v-bind:disabled="!connections.Geo">Leave</button>
+        <br>
+
+        <div v-show='connections.Geo' id='TeacherGeoChat'>
+          <div id='TeacherGeoChatBox'></div>
+          <br>
+          <form action="" v-on:submit.prevent="message(teacher.Geo.currentInput,'Geo',name)">
+            <input type="text" v-model="teacher.Geo.currentInput" name="msg">
+            <button>Send</button>
+          </form>
+        </div>
+
+      </div>
+
+      <div id='studentView' v-if='student.is'>
+        <!-- Student see this -->
+        <h3>Student</h3>
+        <div id='StudentAlg1Chat' v-if='student.liveRooms.Alg1'>
+          <button v-on:click="joinRoom(status,'Alg1')">Alg1</button>
+          <button v-on:click="leaveRoom(status,'Alg1')" v-bind:disabled="!connections.Alg1">Leave</button>
+        </div>
+        <br>
+        <div id='StudentGeoChat' v-if='student.liveRooms.Geo'>
+          <button v-on:click="joinRoom(status,'Geo')">Geo</button>
+          <button v-on:click="leaveRoom(status,'Geo')" v-bind:disabled="!connections.Geo">Leave</button>
+        </div>
+      </div>
+
+
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
