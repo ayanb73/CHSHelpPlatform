@@ -1,0 +1,16 @@
+{
+  "name": "help-platform",
+  "version": "1.0.0",
+  "description": "online platform for math students to access teachers after hours",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ayan Bhattacharjee",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.15.3",
+    "google-auth-library": "^0.10.0",
+    "socket.io": "^2.0.3"
+  }
+}
