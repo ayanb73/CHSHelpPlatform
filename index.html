@@ -75,11 +75,33 @@
         <div id='StudentAlg1Chat' v-if='student.liveRooms.Alg1'>
           <button v-on:click="joinRoom(status,'Alg1')">Alg1</button>
           <button v-on:click="leaveRoom(status,'Alg1')" v-bind:disabled="!connections.Alg1">Leave</button>
+          <br>
+
+          <div id='StudentAlg1ChatBox'></div>
+          <br>
+          <div v-show='connections.Alg1'>
+            <form action="" v-on:submit.prevent="helpMe(student.Alg1.currentInput,'Alg1',name)">
+              <input type="text" v-model="student.Alg1.currentInput" name="msg">
+              <button>Send</button>
+            </form>
+          </div>
+
         </div>
         <br>
+
         <div id='StudentGeoChat' v-if='student.liveRooms.Geo'>
           <button v-on:click="joinRoom(status,'Geo')">Geo</button>
           <button v-on:click="leaveRoom(status,'Geo')" v-bind:disabled="!connections.Geo">Leave</button>
+          <br>
+
+          <div id='StudentGeoChatBox'></div>
+          <br>
+          <div v-show='connections.Geo'>
+            <form action="" v-on:submit.prevent="helpMe(student.Geo.currentInput,'Geo',name)">
+              <input type="text" v-model="student.Geo.currentInput" name="msg">
+              <button>Send</button>
+            </form>
+          </div>
         </div>
       </div>
 

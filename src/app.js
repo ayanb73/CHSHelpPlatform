@@ -61,6 +61,9 @@ socket.on('msg',(msg,senderName,room) => {
   }
 });
 
+// build the student-teacher private message service, may need to include some new function,
+// or something clever on the server-side
+
 // vue.js app
 var vm = new Vue({
   el: '#app',
@@ -73,19 +76,27 @@ var vm = new Vue({
       is: false,
       Alg1: {
         currentInput: "",
-        conversations: [],
+        currentStudent: {},
         room: {}
       },
       Geo: {
         currentInput: "",
-        conversations: [],
+        currentStudent: {},
         room: {}
       },
       directory: []
     },
     student: {
       is: false,
-      liveRooms: {Alg1: false, Geo: false}
+      liveRooms: {Alg1: false, Geo: false},
+      Alg1: {
+        currentInput: "",
+        currentTeacher: {}
+      },
+      Geo: {
+        currentInput: "",
+        currentTeacher: {}
+      }
     }
   },
   methods: {
@@ -122,6 +133,9 @@ var vm = new Vue({
     },
     helpMe: function(msg,room,sender) {
       socket.emit('help me',msg,room,socket.id);
+      // need to establish something permanent, not just one data transfer, but a constant
+      // way of exchanging data
+      // this means SOMETHING NEW
     }
   }
 });

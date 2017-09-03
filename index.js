@@ -156,19 +156,16 @@ io.on('connection', function(socket){
   }, 1000);
 
   socket.on('msg', function(msg,room,sender) {
-    if (connected.teachers.includes(sender)) {
-      var senderName;
-      for (i = 0; i < names.length; i++) {
-        if (names[i].socketID == sender) {
-          senderName = names[i].name;
-          break;
-        } else {continue;}
-      }
-      io.in(room).emit('msg',msg,senderName,room);
-    } else if (connected.students.includes(sender)) {
-      // send to teacher based on a queue
+    var senderName;
+    for (i = 0; i < names.length; i++) {
+      if (names[i].socketID == sender) {
+        senderName = names[i].name;
+        break;
+      } else {continue;}
     }
+    io.in(room).emit('msg',msg,senderName,room);
   });
+
 
   socket.on('disconnect', function() {
     if (connected.teachers.includes(socket.id)) {
