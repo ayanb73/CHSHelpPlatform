@@ -34,34 +34,34 @@
     <div id='app'>
 
       <!-- google sign-in -->
-      <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark" ref="signIn" v-show='!signedIn'></div>
+      <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark" ref="signIn"></div>
 
       <div id='teacherView' v-if='teacher.is'>
         <!-- Teacher see this -->
         <h3>Teacher</h3>
 
-        <button v-on:click="joinRoom(status,'Alg1')">Alg1</button>
-        <button v-on:click="leaveRoom(status,'Alg1')" v-bind:disabled="!connections.Alg1">Leave</button>
+        <button v-on:click="joinRoom(my.occupation,'Alg1')">Alg1</button>
+        <button v-on:click="leaveRoom(my.occupation,'Alg1')" v-bind:disabled="!connections.Alg1">Leave</button>
         <br>
 
         <div v-show="connections.Alg1" id='TeacherAlg1Chat'>
           <div id='TeacherAlg1ChatBox'></div>
           <br>
-          <form action="" v-on:submit.prevent="message(teacher.Alg1.currentInput,'Alg1',name)">
+          <form action="" v-on:submit.prevent="message(teacher.Alg1.currentInput,'Alg1')">
             <input type="text" v-model="teacher.Alg1.currentInput" name="msg">
             <button>Send</button>
           </form>
         </div>
         <br>
 
-        <button v-on:click="joinRoom(status,'Geo')">Geo</button>
-        <button v-on:click="leaveRoom(status,'Geo')" v-bind:disabled="!connections.Geo">Leave</button>
+        <button v-on:click="joinRoom(my.occupation,'Geo')">Geo</button>
+        <button v-on:click="leaveRoom(my.occupation,'Geo')" v-bind:disabled="!connections.Geo">Leave</button>
         <br>
 
         <div v-show='connections.Geo' id='TeacherGeoChat'>
           <div id='TeacherGeoChatBox'></div>
           <br>
-          <form action="" v-on:submit.prevent="message(teacher.Geo.currentInput,'Geo',name)">
+          <form action="" v-on:submit.prevent="message(teacher.Geo.currentInput,'Geo')">
             <input type="text" v-model="teacher.Geo.currentInput" name="msg">
             <button>Send</button>
           </form>
@@ -72,9 +72,9 @@
       <div id='studentView' v-if='student.is'>
         <!-- Student see this -->
         <h3>Student</h3>
-        <div id='StudentAlg1Chat' v-if='student.liveRooms.Alg1'>
-          <button v-on:click="joinRoom(status,'Alg1')">Alg1</button>
-          <button v-on:click="leaveRoom(status,'Alg1')" v-bind:disabled="!connections.Alg1">Leave</button>
+        <div id='StudentAlg1Chat' v-if="liveRooms.includes('Alg1')">
+          <button v-on:click="joinRoom(my.occupation,'Alg1')">Alg1</button>
+          <button v-on:click="leaveRoom(my.occupation,'Alg1')" v-bind:disabled="!connections.Alg1">Leave</button>
           <br>
 
           <div id='StudentAlg1ChatBox'></div>
@@ -89,9 +89,9 @@
         </div>
         <br>
 
-        <div id='StudentGeoChat' v-if='student.liveRooms.Geo'>
-          <button v-on:click="joinRoom(status,'Geo')">Geo</button>
-          <button v-on:click="leaveRoom(status,'Geo')" v-bind:disabled="!connections.Geo">Leave</button>
+        <div id='StudentGeoChat' v-if="liveRooms.includes('Geo')">
+          <button v-on:click="joinRoom(my.occupation,'Geo')">Geo</button>
+          <button v-on:click="leaveRoom(my.occupation,'Geo')" v-bind:disabled="!connections.Geo">Leave</button>
           <br>
 
           <div id='StudentGeoChatBox'></div>
@@ -104,8 +104,6 @@
           </div>
         </div>
       </div>
-
-
 
     </div>
 

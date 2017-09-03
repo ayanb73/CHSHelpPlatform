@@ -15,49 +15,38 @@ function onSignIn(googleUser) {
     vm.signedIn = true;
     if (bool) {
       var prx = profile.getName();
-      vm.name = prx;
+      vm.my.name = prx;
     }
     if (occupation == "teacher") {
       vm.student.is = false;
       vm.teacher.is = true;
-      vm.status = "teacher"
+      vm.my.occupation = "teacher"
     } else if (occupation == "student") {
       vm.student.is = true;
       vm.teacher.is = false;
-      vm.status = "student"
+      vm.my.occupation = "student"
     }
   });
 }
 
-// rooms: 'Alg1', 'Geo'
-socket.on('room update',(rm) => {
-  switch(rm.key) {
-    case 'Alg1':
-      vm.teacher.Alg1.room = rm;
-      break;
-    case 'Geo':
-      vm.teacher.Geo.room = rm;
-      break;
-  }
-});
-socket.on('names update', (names) => {
-  vm.teacher.directory = names;
-});
-socket.on('live rooms update', (update) => {
-  vm.student.liveRooms = update;
+// live rooms update
+socket.on('live rooms update', (array) => {
+  vm.liveRooms = array;
 })
 
 // message updating outside of vue instance
-socket.on('msg',(msg,senderName,room) => {
+socket.on('msg',(msg,room,sender) => {
   var displayName;
-  if (senderName == vm.name) {
+  if (sender.name == vm.name) {
     displayName = "Me";
-  } else {displayName = senderName;}
+  } else {displayName = sender.name;}
   switch(room) {
     case 'Alg1':
       $('#TeacherAlg1ChatBox').append("<div class='genMsg'>"+"From: <span class='senderName'>"+displayName+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
+      break;
     case 'Geo':
       $('#TeacherGeoChatBox').append("<div class='genMsg'>"+"From: <span class='senderName'>"+displayName+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
+      break;
   }
 });
 
@@ -68,27 +57,27 @@ socket.on('msg',(msg,senderName,room) => {
 var vm = new Vue({
   el: '#app',
   data: {
-    name: "",
-    status: "",
+    my: {
+      id: socket.id,
+      name: "",
+      occupation: ""
+    },
     signedIn: false,
     connections: {Alg1: false, Geo: false},
+    liveRooms: [],
     teacher: {
       is: false,
       Alg1: {
         currentInput: "",
-        currentStudent: {},
-        room: {}
+        currentStudent: {}
       },
       Geo: {
         currentInput: "",
-        currentStudent: {},
-        room: {}
-      },
-      directory: []
+        currentStudent: {}
+      }
     },
     student: {
       is: false,
-      liveRooms: {Alg1: false, Geo: false},
       Alg1: {
         currentInput: "",
         currentTeacher: {}
@@ -101,41 +90,32 @@ var vm = new Vue({
   },
   methods: {
     joinRoom: function(ocup,room) {
-      socket.emit('joinRequest',ocup,room);
-      socket.on('joinReqResponse',(req,res) => {
-        if (req) {
-          this.room = res;
-          if (res == 'Alg1') {
-            this.connections.Alg1 = true;
-          }
-          if (res == 'Geo') {
-            this.connections.Geo = true;
-          }
-        }
-      });
+      socket.emit('joinRequest',room,this.my);
+      switch(room) {
+        case 'Alg1':
+          this.connections.Alg1 = true;
+          break;
+        case 'Geo':
+          this.connections.Geo = true;
+          break;
+      }
     },
     leaveRoom: function(ocup,room) {
-      socket.emit('leaveRequest',room,ocup);
-      socket.on('leaveReqResponse', (bool,room) => {
-        if (bool) {
-          this.room = "";
-          if (room == 'Alg1') {
-            this.connections.Alg1 = false;
-          }
-          if (room == 'Geo') {
-            this.connections.Geo = false;
-          }
-        }
-      });
+      socket.emit('leaveRequest',room,this.my);
+      switch(room) {
+        case 'Alg1':
+          this.connections.Alg1 = false;
+          break;
+        case 'Geo':
+          this.connections.Geo = false;
+          break;
+      }
     },
-    message: function(msg,room,sender) {
-      socket.emit('msg',msg,room,socket.id);
+    message: function(msg,room) {
+      socket.emit('msg',msg,room,this.my);
     },
-    helpMe: function(msg,room,sender) {
-      socket.emit('help me',msg,room,socket.id);
-      // need to establish something permanent, not just one data transfer, but a constant
-      // way of exchanging data
-      // this means SOMETHING NEW
+    helpMe: function(msg,room) {
+
     }
   }
 });
