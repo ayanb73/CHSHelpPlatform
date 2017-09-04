@@ -53,29 +53,19 @@ function Room(name) {
     }
   };
   this.helpLine = function(student,socketID) {
-    /*
-    Student sends (room, my-data) -> processed as a 'help req' event ->
-    Server reads 'help req' event, and based on *room* -> commences specific helpLine method ->
-    helpLine(student my-data) creates a permanent link, in the room, between a student and teacher.
-    these links will be stored using a Map object, [unique socket event, {teacher, student}].
-    for the duration of the student socket's connection, all communication sent my the student will go
-    to that respective teacher. On the client side, teacher can send general messages or replies.
-    replies must be dealt with on the client side rendering and functionality wise. With every student
-    linkage the teacher gets, a separate reply form and send must be created, with one vue method that
-    fires the socket.emit event using the event key as a parameter, as well message and my-data.
-    the helpLine method must begin the first event by sending the student's initial message.
-    */
     var uniqueEventID = crypto.randomBytes(10).toString('hex');
     var lineObject = {
-      stu: student.name,
+      stu: socketID,
+      stuName: student.name,
       teach: Array.from(this.teachers.keys())[this.lineIndex],
+      teachName: Array.from(this.teachers.values())[this.lineIndex],
       lineID: uniqueEventID,
       room: this.name
     };
-    io.to(socketID).emit('new-line',lineObject);
+    this.lines.set(uniqueEventID,lineObject);
+    io.to(lineObject.stu).emit('new-line',lineObject);
     io.to(lineObject.teach).emit('new-line',lineObject);
     this.updateLineIndex();
-    return lineObject;
   };
 }
 
@@ -144,10 +134,18 @@ io.on('connection', function(socket){
   });
 
   socket.on('help req', (room,student) => {
-    var newEventID = roomIdentifiers.get(room).helpLine(student,socket.id);
-    socket.on(newEventID.lineID, (msg,student) => {
-      io.in(room).emit(newEventID.lineID,msg,room,student);
-    });
+    roomIdentifiers.get(room).helpLine(student,socket.id);
+  });
+
+  socket.on('line-message', (eventID,msg,room,sender) => {
+    var whichRoom = roomIdentifiers.get(room);
+    var transmit = whichRoom.lines.get(eventID);
+    if (sender.occupation == 'student') {
+      io.to(transmit.teach).emit('line-message',eventID,msg,room,sender);
+    } else if (sender.occupation == 'teacher') {
+      io.to(transmit.stu).emit('line-message',eventID,msg,room,sender);
+    }
+
   });
 
   socket.on('disconnect', function() {

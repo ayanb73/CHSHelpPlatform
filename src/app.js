@@ -1,6 +1,5 @@
 // socket.io
 var socket = io();
-
 // google sign in
 function onSignIn(googleUser) {
   // client-side name
@@ -44,12 +43,12 @@ socket.on('live rooms update', (array) => {
 socket.on('msg',(msg,room,sender) => {
   switch(room) {
     case 'Alg1':
-      $('#TeacherAlg1ChatBox').append("<div class='genMsg'>"+"From: <span class='senderName'>"+sender.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
-      $('#StudentAlg1ChatBox').append("<div class='genMsg'>"+"From: <span class='senderName'>"+sender.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
+      $('#TeacherAlg1ChatBox').append("<div>"+"From: <span>"+sender.name+"</span> To: <span>"+room+"</span><br>"+msg+"</div>");
+      $('#StudentAlg1ChatBox').append("<div>"+"From: <span>"+sender.name+"</span> To: <span>"+room+"</span><br>"+msg+"</div>");
       break;
     case 'Geo':
-      $('#TeacherGeoChatBox').append("<div class='genMsg'>"+"From: <span class='senderName'>"+sender.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
-      $('#StudentGeoChatBox').append("<div class='genMsg'>"+"From: <span class='senderName'>"+sender.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
+      $('#TeacherGeoChatBox').append("<div>"+"From: <span>"+sender.name+"</span> To: <span>"+room+"</span><br>"+msg+"</div>");
+      $('#StudentGeoChatBox').append("<div>"+"From: <span>"+sender.name+"</span> To: <span>"+room+"</span><br>"+msg+"</div>");
       break;
   }
 });
@@ -72,27 +71,16 @@ socket.on('new-line',(newLine) => {
         vm.student.Geo.hasLine = true;
     }
   }
-  socket.on(newLine.lineID,(msg,room,student) => {
-    if (vm.my.occupation == "student") {
-      switch(room) {
-        case 'Alg1':
-          $('#'+newLine.lineID).append("<div class='helpMsg'>"+"From: <span class='senderName'>"+student.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
-          break;
-        case 'Geo':
-          $('#'+newLine.lineID).append("<div class='helpMsg'>"+"From: <span class='senderName'>"+student.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
-          break;
-      }
-    } else if (vm.my.occupation == "teacher") {
-      switch(room) {
-        case 'Alg1':
-          $('#'+newLine.lineID).append("<div class='helpMsg'>"+"From: <span class='senderName'>"+student.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
-          break;
-        case 'Geo':
-          $('#'+newLine.lineID).append("<div class='helpMsg'>"+"From: <span class='senderName'>"+student.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
-          break;
-      }
-    }
-  });
+});
+
+socket.on('line-message', (eventID,msg,room,sender) => {
+  if (sender.occupation == 'teacher') {
+    // student stuff
+    $('#'+eventID).append("<div>"+"From: <span>"+sender.name+"</span> To: <span>"+vm.my.name+"</span><br>"+msg+"</div>");
+  } else if (sender.occupation == 'student') {
+    // teacher stuff
+    $('#'+eventID).append("<div>"+"From: <span>"+sender.name+"</span> To: <span>"+vm.my.name+"</span><br>"+msg+"</div>");
+  }
 });
 
 // vue.js app
@@ -111,12 +99,14 @@ var vm = new Vue({
       Alg1: {
         currentInput: "",
         currentReply: "",
-        currentLines: []
+        currentLines: [],
+        currentStudent: {}
       },
       Geo: {
         currentInput: "",
         currentReply: "",
-        currentLines: []
+        currentLines: [],
+        currentStudent: {}
       }
     },
     student: {
@@ -162,8 +152,9 @@ var vm = new Vue({
     helpMe: function(room) {
       socket.emit('help req',room,this.my);
     },
-    lineMessage: function(eventID,ques) {
-      socket.emit(eventID,ques,this.my);
+    lineMessage: function(eventID,msg,room) {
+      socket.emit('line-message',eventID,msg,room,this.my);
+      $('#'+eventID).append("<div>"+"From: <span>"+this.my.name+"</span> To: <span>"+room+"</span><br>"+msg+"</div>");
     }
   }
 });

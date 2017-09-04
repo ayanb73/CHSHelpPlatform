@@ -8,40 +8,6 @@
     <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.1/vue.js"></script>
 
-    <style>
-      body {
-        font-family: helvetica;
-      }
-      .borderDiv {
-        border: 2px solid black
-      }
-      .live {
-        border-color: green;
-      }
-      .senderName {
-        color: blue;
-      }
-      .roomName {
-        color: red;
-      }
-      .genMsg {
-        font-size: 10px;
-        width: 200px;
-        padding: 10px;
-        border: 5px solid grey;
-        margin: 15px;
-      }
-      .helpMsg {
-        font-size: 10px;
-        width: 200px;
-        padding: 10px;
-        border: 5px solid green;
-        margin: 15px;
-      }
-      div form {
-        margin: 15px;
-      }
-    </style>
   </head>
   <body>
     <div id='app'>
@@ -58,14 +24,16 @@
         <br>
 
         <div v-show="connections.Alg1" id='TeacherAlg1Chat'>
-          <div class="borderDiv" id='TeacherAlg1ChatBox'></div>
-          <div class="borderDiv">
-            <div class="borderDiv" v-bind:id="line.lineID" v-for="(line,index) in teacher.Alg1.currentLines">
-              <form class="lineReply" action="" v-on:submit.prevent='lineMessage(teacher.Alg1.currentLines[n].lineID,teacher.Alg1.currentReply)'>
-                <input type="text" v-model="teacher.Alg1.currentReply" name="msg">
-                <button>Reply</button>
-              </form>
-            </div>
+          <div  id='TeacherAlg1ChatBox'></div>
+          <div >
+            <div  v-bind:id="line.lineID" v-for="(line,index) in teacher.Alg1.currentLines"></div>
+            <form  action="" v-on:submit.prevent='lineMessage(teacher.Alg1.currentStudent,teacher.Alg1.currentReply,"Alg1")'>
+              <select v-model="teacher.Alg1.currentStudent">
+                <option v-for="line in teacher.Alg1.currentLines" v-bind:value="line.lineID">{{line.stuName}}</option>
+              </select>
+              <input type="text" v-model="teacher.Alg1.currentReply" name="msg">
+              <button>Reply</button>
+            </form>
           </div>
           <br>
           <form action="" v-on:submit.prevent="message(teacher.Alg1.currentInput,'Alg1')">
@@ -80,14 +48,16 @@
         <br>
 
         <div v-show='connections.Geo' id='TeacherGeoChat'>
-          <div class="borderDiv" id='TeacherGeoChatBox'></div>
+          <div id='TeacherGeoChatBox'></div>
           <div>
-            <div class="borderDiv" v-bind:id="line.lineID" v-for="(line,index) in teacher.Geo.currentLines">
-              <form class="lineReply" action="" v-on:submit.prevent='lineMessage(teacher.Geo.currentLines[n].lineID,teacher.Geo.currentReply)'>
-                <input type="text" v-model="teacher.Geo.currentReply" name="msg">
-                <button>Reply</button>
-              </form>
-            </div>
+            <div v-bind:id="line.lineID" v-for="(line,index) in teacher.Geo.currentLines"></div>
+            <form action="" v-on:submit.prevent='lineMessage(teacher.Geo.currentStudent,teacher.Geo.currentReply,"Geo")'>
+              <select v-model="teacher.Geo.currentStudent">
+                <option v-for="line in teacher.Geo.currentLines" v-bind:value="line.lineID">{{line.stuName}}</option>
+              </select>
+              <input type="text" v-model="teacher.Geo.currentReply" name="msg">
+              <button>Reply</button>
+            </form>
           </div>
           <br>
           <form action="" v-on:submit.prevent="message(teacher.Geo.currentInput,'Geo')">
@@ -106,14 +76,14 @@
           <button v-on:click="leaveRoom('Alg1')" v-bind:disabled="!connections.Alg1">Leave</button>
           <br>
 
-          <div class="borderDiv" id='StudentAlg1ChatBox'></div>
-          <div class="borderDiv" v-bind:id="student.Alg1.currentLine.lineID"></div>
+          <div id='StudentAlg1ChatBox'></div>
+          <div v-bind:id="student.Alg1.currentLine.lineID"></div>
           <br>
           <div v-show='connections.Alg1'>
-            <form action="" v-on:submit.prevent="helpMe('Alg1')">
-              <button v-if="!student.Alg1.hasLine">I need help!</button>
+            <form v-if="!student.Alg1.hasLine" action="" v-on:submit.prevent="helpMe('Alg1')">
+              <button >I need help!</button>
             </form>
-            <form action="" v-if='student.Alg1.hasLine' v-on:submit.prevent='lineMessage(student.Alg1.currentLine.lineID,student.Alg1.currentInput)'>
+            <form action="" v-if='student.Alg1.hasLine' v-on:submit.prevent='lineMessage(student.Alg1.currentLine.lineID,student.Alg1.currentInput,"Alg1")'>
                 <input type="text" v-model="student.Alg1.currentInput" name="msg">
                 <button>Send</button>
             </form>
@@ -127,14 +97,14 @@
           <button v-on:click="leaveRoom('Geo')" v-bind:disabled="!connections.Geo">Leave</button>
           <br>
 
-          <div class="borderDiv" id='StudentGeoChatBox'></div>
-          <div class="borderDiv" v-bind:id="student.Geo.currentLine.lineID"></div>
+          <div  id='StudentGeoChatBox'></div>
+          <div v-bind:id="student.Geo.currentLine.lineID"></div>
           <br>
           <div v-show='connections.Geo'>
-            <form action="" v-on:submit.prevent="helpMe('Geo')">
-              <button v-if='student.Geo.hasLine'>I need help!</button>
+            <form v-if='student.Geo.hasLine' action="" v-on:submit.prevent="helpMe('Geo')">
+              <button >I need help!</button>
             </form>
-            <form action="" v-if='student.Geo.hasLine' v-on:submit.prevent='lineMessage(student.Geo.currentLine.lineID,student.Geo.currentInput)'>
+            <form action="" v-if='student.Geo.hasLine' v-on:submit.prevent='lineMessage(student.Geo.currentLine.lineID,student.Geo.currentInput,"Geo")'>
                 <input type="text" v-model="student.Geo.currentInput" name="msg">
                 <button>Send</button>
             </form>
