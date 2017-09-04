@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
+const crypto = require('crypto');
 const GoogleAuth = require('google-auth-library');
 
 // google account authenciation
@@ -12,42 +13,29 @@ const client = new auth.OAuth2('608787834828-71306h3l0d8tfg0ooudb8enkm7dd1ta3.ap
 // server port
 const port = process.env.PORT || 3000
 
-var connected = {
-  teachers: [],
-  students: []
-}
-var names = []
-var Alg1 = {
-  key: 'Alg1',
-  teachers: [],
-  students: []
-}
-var Geo = {
-  key: 'Geo',
-  teachers: [],
-  students: []
-}
-
 // user object standard - {id: socketID, name: googleName, occupation: teacher/student}
-function Room() {
+function Room(name) {
+  this.name = name;
   // room properties
   // [socket id, google name]
   this.teachers = new Map();
   this.students = new Map();;
-
+  // [unique socket event, {teacher: id, student: id}]
+  this.lines = new Map();
+  this.lineIndex = 0;
   // room methods
-  this.join = function(user) {
+  this.join = function(user,socketID) {
     if (user.occupation == "teacher") {
-      this.teachers.set(user.id,user.name);
+      this.teachers.set(socketID,user.name);
     } else if (user.occupation == "student") {
-      this.students.set(user.id,user.name);
+      this.students.set(socketID,user.name);
     }
   };
-  this.leave = function(user) {
+  this.leave = function(user,socketID) {
     if (user.occupation == "teacher") {
-      this.teachers.delete(user.id);
+      this.teachers.delete(socketID);
     } else if (user.occupation == "student") {
-      this.students.delete(user.id);
+      this.students.delete(socketID);
     }
   };
   this.live = function() {
@@ -57,16 +45,45 @@ function Room() {
       return false;
     }
   };
-  this.helpLine = function() {
-    // student help line code goes here
+  this.updateLineIndex = function() {
+    if (this.lineIndex < this.teachers.size - 1) {
+      this.lineIndex++;
+    } else if (this.lineIndex == this.teachers.size - 1) {
+      this.lineIndex = 0;
+    }
+  };
+  this.helpLine = function(student,socketID) {
+    /*
+    Student sends (room, my-data) -> processed as a 'help req' event ->
+    Server reads 'help req' event, and based on *room* -> commences specific helpLine method ->
+    helpLine(student my-data) creates a permanent link, in the room, between a student and teacher.
+    these links will be stored using a Map object, [unique socket event, {teacher, student}].
+    for the duration of the student socket's connection, all communication sent my the student will go
+    to that respective teacher. On the client side, teacher can send general messages or replies.
+    replies must be dealt with on the client side rendering and functionality wise. With every student
+    linkage the teacher gets, a separate reply form and send must be created, with one vue method that
+    fires the socket.emit event using the event key as a parameter, as well message and my-data.
+    the helpLine method must begin the first event by sending the student's initial message.
+    */
+    var uniqueEventID = crypto.randomBytes(10).toString('hex');
+    var lineObject = {
+      stu: student.name,
+      teach: Array.from(this.teachers.keys())[this.lineIndex],
+      lineID: uniqueEventID,
+      room: this.name
+    };
+    io.to(socketID).emit('new-line',lineObject);
+    io.to(lineObject.teach).emit('new-line',lineObject);
+    this.updateLineIndex();
+    return lineObject;
   };
 }
 
 // the room architecture
-const AllConnected = new Room();
+const AllConnected = new Room("Big");
 // rooms
-const AlgebraOne = new Room();
-const Geometry = new Room();
+const AlgebraOne = new Room("Alg1");
+const Geometry = new Room("Geo");
 // room directory
 const identifiersArray = [['Alg1',AlgebraOne],['Geo',Geometry]];
 const roomIdentifiers = new Map(identifiersArray);
@@ -75,7 +92,7 @@ const roomIdentifiers = new Map(identifiersArray);
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
-app.use(express.static('src'))
+app.use(express.static('src'));
 
 // event-driven websockets communication
 io.on('connection', function(socket){
@@ -92,10 +109,10 @@ io.on('connection', function(socket){
         io.to(socket.id).emit('verify', true);
       } */
       if (payload.name.includes("(")) {
-        io.to(socket.id).emit('verify',true,'student');
+        socket.emit('verify',true,'student');
         AllConnected.students.set(socket.id,payload.name);
       } else {
-        io.to(socket.id).emit('verify',true,'teacher');
+        socket.emit('verify',true,'teacher');
         AllConnected.teachers.set(socket.id,payload.name);
       }
     });
@@ -103,12 +120,12 @@ io.on('connection', function(socket){
 
   socket.on('joinRequest', (room,user) => {
     socket.join(room);
-    roomIdentifiers.get(room).join(user);
+    roomIdentifiers.get(room).join(user,socket.id);
   });
 
   socket.on('leaveRequest', (room,user) => {
     socket.leave(room);
-    roomIdentifiers.get(room).leave(user);
+    roomIdentifiers.get(room).leave(user,socket.id);
   });
 
   setInterval(function(){
@@ -126,6 +143,12 @@ io.on('connection', function(socket){
     io.in(room).emit('msg',msg,room,sender);
   });
 
+  socket.on('help req', (room,student) => {
+    var newEventID = roomIdentifiers.get(room).helpLine(student,socket.id);
+    socket.on(newEventID.lineID, (msg,student) => {
+      io.in(room).emit(newEventID.lineID,msg,room,student);
+    });
+  });
 
   socket.on('disconnect', function() {
     for (var [key,value] of roomIdentifiers) {

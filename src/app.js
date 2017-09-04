@@ -1,5 +1,3 @@
-// next up, student side development
-
 // socket.io
 var socket = io();
 
@@ -20,7 +18,7 @@ function onSignIn(googleUser) {
     if (occupation == "teacher") {
       vm.student.is = false;
       vm.teacher.is = true;
-      vm.my.occupation = "teacher"
+      vm.my.occupation = "teacher";
     } else if (occupation == "student") {
       vm.student.is = true;
       vm.teacher.is = false;
@@ -29,67 +27,114 @@ function onSignIn(googleUser) {
   });
 }
 
+// new socket event with specific eventID
+
+
 // live rooms update
 socket.on('live rooms update', (array) => {
-  vm.liveRooms = array;
-})
+  if (array.includes('Alg1')) {
+    vm.liveRooms.Alg1 = true;
+  } else {vm.liveRooms.Alg1 = false;}
+  if (array.includes('Geo')) {
+    vm.liveRooms.Geo = true;
+  } else {vm.liveRooms.Geo = false;}
+});
 
 // message updating outside of vue instance
 socket.on('msg',(msg,room,sender) => {
-  var displayName;
-  if (sender.name == vm.name) {
-    displayName = "Me";
-  } else {displayName = sender.name;}
   switch(room) {
     case 'Alg1':
-      $('#TeacherAlg1ChatBox').append("<div class='genMsg'>"+"From: <span class='senderName'>"+displayName+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
+      $('#TeacherAlg1ChatBox').append("<div class='genMsg'>"+"From: <span class='senderName'>"+sender.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
+      $('#StudentAlg1ChatBox').append("<div class='genMsg'>"+"From: <span class='senderName'>"+sender.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
       break;
     case 'Geo':
-      $('#TeacherGeoChatBox').append("<div class='genMsg'>"+"From: <span class='senderName'>"+displayName+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
+      $('#TeacherGeoChatBox').append("<div class='genMsg'>"+"From: <span class='senderName'>"+sender.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
+      $('#StudentGeoChatBox').append("<div class='genMsg'>"+"From: <span class='senderName'>"+sender.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
       break;
   }
 });
 
-// build the student-teacher private message service, may need to include some new function,
-// or something clever on the server-side
+socket.on('new-line',(newLine) => {
+  if (vm.my.occupation == "teacher") {
+    switch(newLine.room) {
+      case 'Alg1':
+        vm.teacher.Alg1.currentLines.push(newLine);
+      case 'Geo':
+        vm.teacher.Geo.currentLines.push(newLine);
+    }
+  } else if (vm.my.occupation == "student") {
+    switch(newLine.room) {
+      case 'Alg1':
+        vm.student.Alg1.currentLine = newLine;
+        vm.student.Alg1.hasLine = true;
+      case 'Geo':
+        vm.student.Geo.currentLine = newLine;
+        vm.student.Geo.hasLine = true;
+    }
+  }
+  socket.on(newLine.lineID,(msg,room,student) => {
+    if (vm.my.occupation == "student") {
+      switch(room) {
+        case 'Alg1':
+          $('#'+newLine.lineID).append("<div class='helpMsg'>"+"From: <span class='senderName'>"+student.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
+          break;
+        case 'Geo':
+          $('#'+newLine.lineID).append("<div class='helpMsg'>"+"From: <span class='senderName'>"+student.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
+          break;
+      }
+    } else if (vm.my.occupation == "teacher") {
+      switch(room) {
+        case 'Alg1':
+          $('#'+newLine.lineID).append("<div class='helpMsg'>"+"From: <span class='senderName'>"+student.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
+          break;
+        case 'Geo':
+          $('#'+newLine.lineID).append("<div class='helpMsg'>"+"From: <span class='senderName'>"+student.name+"</span> To: <span class='roomName'>"+room+"</span><br>"+msg+"</div>");
+          break;
+      }
+    }
+  });
+});
 
 // vue.js app
 var vm = new Vue({
   el: '#app',
   data: {
     my: {
-      id: socket.id,
       name: "",
       occupation: ""
     },
     signedIn: false,
     connections: {Alg1: false, Geo: false},
-    liveRooms: [],
+    liveRooms: {Alg1: false, Geo: false},
     teacher: {
       is: false,
       Alg1: {
         currentInput: "",
-        currentStudent: {}
+        currentReply: "",
+        currentLines: []
       },
       Geo: {
         currentInput: "",
-        currentStudent: {}
+        currentReply: "",
+        currentLines: []
       }
     },
     student: {
       is: false,
       Alg1: {
         currentInput: "",
-        currentTeacher: {}
+        currentLine: {},
+        hasLine: false
       },
       Geo: {
         currentInput: "",
-        currentTeacher: {}
+        currentLine: {},
+        hasLine: false
       }
     }
   },
   methods: {
-    joinRoom: function(ocup,room) {
+    joinRoom: function(room) {
       socket.emit('joinRequest',room,this.my);
       switch(room) {
         case 'Alg1':
@@ -100,7 +145,7 @@ var vm = new Vue({
           break;
       }
     },
-    leaveRoom: function(ocup,room) {
+    leaveRoom: function(room) {
       socket.emit('leaveRequest',room,this.my);
       switch(room) {
         case 'Alg1':
@@ -114,8 +159,11 @@ var vm = new Vue({
     message: function(msg,room) {
       socket.emit('msg',msg,room,this.my);
     },
-    helpMe: function(msg,room) {
-
+    helpMe: function(room) {
+      socket.emit('help req',room,this.my);
+    },
+    lineMessage: function(eventID,ques) {
+      socket.emit(eventID,ques,this.my);
     }
   }
 });
