@@ -9,7 +9,7 @@ Ayan Bhattacharjee
     <meta charset="utf-8">
     <meta name="google-signin-client_id" content="608787834828-71306h3l0d8tfg0ooudb8enkm7dd1ta3.apps.googleusercontent.com">
     <title>Platform</title>
-    <!-- jQuery, Google Client API, Vue.js -->
+    <!-- jQuery, Google Client API, Vue.js-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.1/vue.js"></script>
@@ -23,96 +23,12 @@ Ayan Bhattacharjee
       <!-- the html which teachers will see -->
       <div id='teacherView' v-if='teacher.is'>
         <h3>Teacher</h3>
-        <!-- for the Algera One classroom -->
-        <div>
-          <button v-on:click="joinRoom('Alg1')">Alg1</button>
-          <button v-on:click="leaveRoom('Alg1')" v-bind:disabled="!connections.Alg1">Leave</button>
-          <div v-show="connections.Alg1" id='TeacherAlg1Chat'>
-            <div id='TeacherAlg1ChatBox'></div>
-            <div>
-              <div v-bind:id="line.lineID" v-for="(line,index) in teacher.Alg1.currentLines">
-                <h4>{{line.stuName}}</h4>
-              </div>
-              <form action="" v-on:submit.prevent='lineMessage(teacher.Alg1.currentStudent,teacher.Alg1.currentReply,"Alg1")'>
-                <select v-model="teacher.Alg1.currentStudent">
-                  <option v-for="line in teacher.Alg1.currentLines" v-bind:value="line.lineID">{{line.stuName}}</option>
-                </select>
-                <input type="text" v-model="teacher.Alg1.currentReply" name="msg">
-                <button>Reply</button>
-              </form>
-            </div>
-            <form action="" v-on:submit.prevent="message(teacher.Alg1.currentInput,'Alg1')">
-              <input type="text" v-model="teacher.Alg1.currentInput" name="msg">
-              <button>Public Msg</button>
-            </form>
-          </div>
-        </div>
-        <!-- for the Geometry classroom -->
-        <div>
-          <button v-on:click="joinRoom('Geo')">Geo</button>
-          <button v-on:click="leaveRoom('Geo')" v-bind:disabled="!connections.Geo">Leave</button>
-          <div v-show='connections.Geo' id='TeacherGeoChat'>
-            <div id='TeacherGeoChatBox'></div>
-            <div>
-              <div v-bind:id="line.lineID" v-for="(line,index) in teacher.Geo.currentLines">
-                <h4>{{line.stuName}}</h4>
-              </div>
-              <form action="" v-on:submit.prevent='lineMessage(teacher.Geo.currentStudent,teacher.Geo.currentReply,"Geo")'>
-                <select v-model="teacher.Geo.currentStudent">
-                  <option v-for="line in teacher.Geo.currentLines" v-bind:value="line.lineID">{{line.stuName}}</option>
-                </select>
-                <input type="text" v-model="teacher.Geo.currentReply" name="msg">
-                <button>Reply</button>
-              </form>
-            </div>
-            <form action="" v-on:submit.prevent="message(teacher.Geo.currentInput,'Geo')">
-              <input type="text" v-model="teacher.Geo.currentInput" name="msg">
-              <button>Public Msg</button>
-            </form>
-          </div>
-        </div>
 
       </div>
       <!-- the end of teacher view html -->
       <!-- below is html the student's will view -->
       <div id='studentView' v-if='student.is'>
         <h3>Student</h3>
-        <!-- the Algebra One box-->
-        <div id='StudentAlg1Chat' v-if="liveRooms.Alg1">
-          <button v-on:click="joinRoom('Alg1')">Alg1</button>
-          <button v-on:click="leaveRoom('Alg1')" v-bind:disabled="!connections.Alg1">Leave</button>
-          <div id='StudentAlg1ChatBox'></div>
-          <div v-bind:id="student.Alg1.currentLine.lineID">
-            <h4>{{student.Alg1.currentLine.teachName}}</h4>
-          </div>
-          <div v-show='connections.Alg1'>
-            <form v-if="!student.Alg1.hasLine" action="" v-on:submit.prevent="helpMe('Alg1')">
-              <button >I need help!</button>
-            </form>
-            <form action="" v-if='student.Alg1.hasLine' v-on:submit.prevent='lineMessage(student.Alg1.currentLine.lineID,student.Alg1.currentInput,"Alg1")'>
-                <input type="text" v-model="student.Alg1.currentInput" name="msg">
-                <button>Send</button>
-            </form>
-          </div>
-        </div>
-        <!-- the Geometry box -->
-        <div id='StudentGeoChat' v-if="liveRooms.Geo">
-          <button v-on:click="joinRoom('Geo')">Geo</button>
-          <button v-on:click="leaveRoom('Geo')" v-bind:disabled="!connections.Geo">Leave</button>
-          <div id='StudentGeoChatBox'></div>
-          <div v-bind:id="student.Geo.currentLine.lineID">
-            <h4>{{student.Alg1.currentLine.teachName}}</h4>
-          </div>
-          <div v-show='connections.Geo'>
-            <form v-if='student.Geo.hasLine' action="" v-on:submit.prevent="helpMe('Geo')">
-              <button >I need help!</button>
-            </form>
-            <form action="" v-if='student.Geo.hasLine' v-on:submit.prevent='lineMessage(student.Geo.currentLine.lineID,student.Geo.currentInput,"Geo")'>
-                <input type="text" v-model="student.Geo.currentInput" name="msg">
-                <button>Send</button>
-            </form>
-          </div>
-        </div>
 
       </div>
       <!-- the end of student view html -->
