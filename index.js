@@ -18,6 +18,9 @@ const client = new auth.OAuth2('608787834828-71306h3l0d8tfg0ooudb8enkm7dd1ta3.ap
 // server port
 const port = process.env.PORT || 3000
 
+// rooms
+var rooms = [];
+
 // the room object, basis for the entire server
 function Room(name) {
   this.name = name;
@@ -95,15 +98,20 @@ io.on('connection', function(socket){
       }
       */
       if (payload.name.includes("(")) { // student on domain
-        socket.emit('verify',true,'student');
+        socket.emit('verify',true,'student',rooms);
       } else { // teacher
-        socket.emit('verify',true,'teacher');
+        socket.emit('verify',true,'teacher',rooms);
       }
     });
   });
   socket.on('new room',(name) => {
     socket.broadcast.emit('new room',name);
+    rooms.push(name);
   });
+  socket.on('announcement',(msg,sender) => {
+    console.log('it works');
+    socket.broadcast.emit('announcement',msg,sender);
+  })
 });
 // http sever up and running confirmation
 http.listen(port, function(){

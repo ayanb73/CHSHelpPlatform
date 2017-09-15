@@ -42,9 +42,35 @@ Ayan Bhattacharjee
                   </div>
                   <div class="modal-body">
                     <form v-on:submit.prevent="newRoom($refs.roomName.value)">
-                      Room Name (unique, no spaces):<br>
-                      <input type="text" ref="roomName" name="roomname"><br><br>
-                      <button class="btn btn-default" type="submit">Submit</button>
+                      <div class="form-group">
+                        Room Name (unique, no spaces):<br>
+                        <input type="text" ref="roomName" name="roomname"><br><br>
+                      </div>
+                      <button class="btn btn-primary" type="submit">Submit</button>
+                      <button type="button" class="btn btn-default" data-dismiss="modal" aria-label="Close">Close</button>
+                    </form>
+                  </div>
+                  <div class="modal-footer"></div>
+                </div><!-- /.modal-content -->
+              </div><!-- /.modal-dialog -->
+            </div><!-- /.modal -->
+            <br><br>
+            <button type="button" class="btn btn-default" data-toggle="modal" data-target="#announce">Announcement</button>
+            <div class="modal fade" tabindex="-1" role="dialog" id="announce">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Send a message to everyone</h4>
+                  </div>
+                  <div class="modal-body">
+                    <form v-on:submit.prevent="announce($refs.announcement.value)">
+                      <div class="form-group">
+                        Message:<br>
+                        <input type="text" ref="announcement" name="announcement"><br><br>
+                      </div>
+                      <button class="btn btn-primary" type="submit">Send</button>
+                      <button type="button" class="btn btn-default" data-dismiss="modal" aria-label="Close">Close</button>
                     </form>
                   </div>
                   <div class="modal-footer"></div>
@@ -58,7 +84,7 @@ Ayan Bhattacharjee
             </ul>
       			<div class="tab-content clearfix panel" >
       			  <div class="tab-pane" v-for='room in rooms' v-bind:id='room.name'>
-                <div class="panel-title">Student names of {{room.name}}</div>
+                <div class="panel-heading">Student names of {{room.name}}</div>
                 <div class="panel-body">
                   {{room.name}} <br>{{room.name}}
                 </div>

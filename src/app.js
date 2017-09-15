@@ -13,7 +13,7 @@ function onSignIn(googleUser) {
   // backend domain verification
   var id_token = googleUser.getAuthResponse().id_token;
   socket.emit('verify', id_token); // sends id_token to server
-  socket.on('verify', function(bool, occupation){ // server responds
+  socket.on('verify', function(bool, occupation, rooms){ // server responds
     vm.signedIn = true;
     if (bool) {
       var prx = profile.getName();
@@ -23,10 +23,12 @@ function onSignIn(googleUser) {
       vm.student.is = false;
       vm.teacher.is = true;
       vm.my.occupation = "teacher";
+      vm.rooms = rooms;
     } else if (occupation == "student") { // what happens if server determines student
       vm.student.is = true;
       vm.teacher.is = false;
-      vm.my.occupation = "student"
+      vm.my.occupation = "student";
+      vm.rooms = rooms;
     }
   });
 }
@@ -52,9 +54,18 @@ var vm = new Vue({
     newRoom: function(name) {
       socket.emit('new room',{name: name});
       this.rooms.push({name: name});
-      socket.on('new room',(room) => {
-        this.rooms.push(room);
-      });
+    },
+    announce: function(message) {
+      socket.emit('announcement',message,this.my.name);
+      $('#app').prepend('<div class="alert alert-info alert-dismissable fade in"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><strong>' + this.my.name + ': </strong>' + message + '</div>');
     }
+  },
+  mounted: function() {
+    socket.on('new room',(room) => {
+      this.rooms.push(room);
+    });
+    socket.on('announcement',(msg,sender) => {
+      $('#app').prepend('<div class="alert alert-info alert-dismissable fade in"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><strong>' + sender + ': </strong>' + msg + '</div>');
+    });
   }
 });
